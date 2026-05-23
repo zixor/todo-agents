@@ -45,6 +45,11 @@ di.js         → composition root, wires everything
 - `jest.mock('jspdf', ...)` and `jest.mock('jspdf-autotable', ...)` required for any test importing App or ExportTodosPDF (see `App.test.js` for exact mock).
 - Only `App.test.js` exists — no tests for use cases, mapper, or repositories.
 
+## Reference Docs
+
+- `SDD.md` — design document (Spanish, deep architecture detail).
+- `frontend/README.md` — frontend-specific setup, component list, standalone clone guide.
+
 ## Gotchas
 
 - `frontend/` is a detached git submodule (mode 160000 in index, no `.gitmodules`). `git status` at root won't show changes inside it — run `git` commands from `frontend/` directly.
