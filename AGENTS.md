@@ -58,3 +58,12 @@ di.js         → composition root, imports everything
 - `frontend/` is a git submodule (mode 160000 in index, but **no `.gitmodules`** file). Changes inside it must be committed in a separate repo.
 - UI error messages are in **Spanish** (see `App.js` error strings).
 - Key design docs: `SDD.md` (architectural details, Spanish), `STACK.md` (tech stack, English).
+
+## Search
+
+- Search is client-side filtering in `App.js`. A `searchTerm` state drives a derived `filteredTodos` array that filters `todos` by `todo.title` (case-insensitive). No use case or repository method needed.
+
+
+### Tools 
+
+when you need to search docs, use `context7`  tools.
