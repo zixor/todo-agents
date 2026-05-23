@@ -3,16 +3,14 @@
 ## Commands
 
 ```sh
-npm install              # root — backend deps
 npm run dev              # root — concurrently runs backend:3001 + frontend:3000
 ```
 
-Frontend commands (from `frontend/`):
+Frontend (`frontend/`):
 
 ```sh
-npm install              # separate install (NOT covered by root npm install)
-npm start                # CRA dev server on :3000
-npm test                 # react-scripts test (Jest + RTL)
+npm install              # NOT covered by root npm install
+npm test                 # react-scripts test (Jest + RTL, single suite: App.test.js)
 npm run build            # production build
 ```
 
@@ -21,49 +19,38 @@ npm run build            # production build
 
 ## Architecture
 
-Strict dependency rule — `frontend/src/` layers import inward only:
-
 ```
-domain/       → no project imports (pure JS)
-application/  → may import domain/
-infrastructure/ → may import domain/
+domain/       → no project imports (pure JS: Todo entity, TodoRepository abstract)
+application/  → may import domain/ (use cases: GetTodos, CreateTodo, etc.)
+infrastructure/ → may import domain/ (LocalStorageTodoRepository, TodoMapper)
 presentation/ → may import application/ and infrastructure/
-di.js         → composition root, imports everything
+di.js         → composition root, wires everything
 ```
 
 - Do **not** instantiate repositories or use cases outside `di.js`.
-- Use cases receive the repository via constructor: `new GetTodos(todoRepository)`.
-- `ExportTodosPDF.execute(todos)` takes the raw array directly, **not** via repository.
+- Use cases receive repository via constructor: `new GetTodos(todoRepository)`.
+- `ExportTodosPDF.execute(todos)` takes raw array directly, **not** via repository.
 - All source imports use explicit `.js` extensions.
-- `App.css` lives at `src/App.css` (not in `presentation/components/`) — App.js imports it as `../../App.css`.
+- React components live in `presentation/components/`: `Button`, `Input`, `Checkbox`, `Form`, `Heading`, `Text`, `List`, `ListItem`. `App.js` is at `presentation/App.js`.
+- Styling: `src/App.css` — single CSS file, no CSS modules.
+
+## State
+
+- Zustand `useTodoStore` in `presentation/store/useTodoStore.js`.
+- Search is client-side: `searchTerm` state drives `filteredTodos` derived array.
 
 ## Testing
 
-- `jest.mock('jspdf', ...)` / `jest.mock('jspdf-autotable', ...)` required in any test importing App or ExportTodosPDF. See `src/App.test.js` for the exact mock pattern.
+- `jest.mock('jspdf', ...)` / `jest.mock('jspdf-autotable', ...)` required for any test importing App or ExportTodosPDF. See `src/App.test.js` for exact mock.
 - Only `App.test.js` exists — no tests for use cases, mapper, or repositories.
 
 ## Storage
 
-- `localStorage` key: `"todos"` (JSON array). Frontend **never** calls the backend API.
+- `localStorage` key `"todos"` (JSON array). Frontend **never** calls backend API despite backend/ existing.
 - ID generation: `Math.max(...items.map(t => t.id)) + 1` (returns 1 if empty).
-
-## Backend
-
-- Express 4 in `backend/`. Root `package.json` lists express@5 but it is unused at runtime.
-- In-memory array — **not persisted** across restarts.
-- Port: `PORT` env var or 3001. Routes: `/api/health`, `/api/greet`, `/api/todos` CRUD.
 
 ## Gotchas
 
-- `frontend/` is a git submodule (mode 160000 in index, but **no `.gitmodules`** file). Changes inside it must be committed in a separate repo.
-- UI error messages are in **Spanish** (see `App.js` error strings).
-- Key design docs: `SDD.md` (architectural details, Spanish), `STACK.md` (tech stack, English).
-
-## Search
-
-- Search is client-side filtering in `App.js`. A `searchTerm` state drives a derived `filteredTodos` array that filters `todos` by `todo.title` (case-insensitive). No use case or repository method needed.
-
-
-### Tools 
-
-when you need to search docs, use `context7`  tools.
+- `frontend/` is a detached git submodule (mode 160000 in index, no `.gitmodules`). Changes inside it commit to a separate repo.
+- UI error messages are in **Spanish** (store strings).
+- `backend/` runs Express 4 on `PORT` or 3001. Not used by frontend at runtime.
